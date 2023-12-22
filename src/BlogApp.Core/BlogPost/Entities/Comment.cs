@@ -19,6 +19,14 @@ namespace BlogApp.Core
             BlogPostId = blogPost.Id;
             BlogPost = blogPost;
         }
+        public Comment(string body, BlogAppUser author, Comment parentComment)
+        {
+            Body = body;
+            AuthorId = author.Id;
+            Author = author;
+            ParentCommentId = parentComment.Id;
+            ParentComment = parentComment;
+        }
         public Comment(string body, Guid authorId, BlogPost blogPost)
         {
             Body = body;
@@ -26,18 +34,40 @@ namespace BlogApp.Core
             BlogPostId = blogPost.Id;
             BlogPost = blogPost;
         }
-        public Comment(string body, BlogAppUser author, Guid blogPostId)
+        public Comment(string body, Guid authorId, Comment parentComment)
+        {
+            Body = body;
+            AuthorId = authorId;
+            ParentCommentId = parentComment.Id;
+            ParentComment = parentComment;
+        }
+        public Comment(string body, BlogAppUser author, Guid parentId,CommentParentType commentParentType)
         {
             Body = body;
             AuthorId = author.Id;
             Author = author;
-            BlogPostId = blogPostId;
+            if(commentParentType == CommentParentType.BlogPost)
+            {
+                BlogPostId = parentId;
+            }
+            else
+            {
+                ParentCommentId = parentId;
+            }
         }
-        public Comment(string body, Guid authorId, Guid blogPostId)
+
+        public Comment(string body, Guid authorId, Guid parentId, CommentParentType commentParentType)
         {
             Body = body;
             AuthorId = authorId;
-            BlogPostId = blogPostId;
+            if (commentParentType == CommentParentType.BlogPost)
+            {
+                BlogPostId = parentId;
+            }
+            else
+            {
+                ParentCommentId = parentId;
+            }
         }
 
         #endregion
@@ -52,11 +82,18 @@ namespace BlogApp.Core
         [InverseProperty(nameof(BlogAppUser.Comments))]
         public virtual BlogAppUser? Author { get; private set; }
 
-        [Required]
-        public Guid BlogPostId { get; private set; }
+        public Guid? BlogPostId { get; private set; }
         [ForeignKey(nameof(BlogPostId))]
         [InverseProperty(nameof(BlogPost.Comments))]
         public virtual BlogPost? BlogPost { get; private set; }
+
+        public Guid? ParentCommentId { get; private set; }
+        [ForeignKey(nameof(ParentCommentId))]
+        [InverseProperty(nameof(Comment.ChildComments))]
+        public virtual Comment? ParentComment { get; private set; }
+
+        [InverseProperty(nameof(Comment.ParentComment))]
+        public virtual IEnumerable<Comment>? ChildComments { get; private set; }
 
 
         [InverseProperty(nameof(CommentInteraction.Comment))]
@@ -67,6 +104,7 @@ namespace BlogApp.Core
         public void SetBody(string body)
         {
             Body = body;
+            ModifiedDate = DateTime.Now;
         }
         #endregion
 
